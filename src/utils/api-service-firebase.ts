@@ -1,15 +1,16 @@
 /**
- * Frontend API Service
- * ALL API calls to backend microservices go through here
+ * Frontend API Service (Firebase)
+ * ALL API calls to backend Cloud Functions go through here
  * NO BUSINESS LOGIC IN FRONTEND - only API communication
  */
 
-import { projectId, publicAnonKey } from './supabase/info';
-
-const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-e18c4393`;
-
 // Store token in memory (use context/state management in production)
 let authToken: string | null = null;
+
+// Get Firebase project ID and region from environment
+const FIREBASE_PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID || '';
+const FIREBASE_REGION = import.meta.env.VITE_FIREBASE_REGION || 'us-central1';
+const API_BASE_URL = `https://${FIREBASE_REGION}-${FIREBASE_PROJECT_ID}.cloudfunctions.net/api`;
 
 export function setAuthToken(token: string | null) {
   authToken = token;
@@ -36,7 +37,7 @@ async function apiRequest<T>(
     const token = getAuthToken();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token || publicAnonKey}`,
+      ...(token && { 'Authorization': `Bearer ${token}` }),
       ...options.headers,
     };
 
@@ -73,11 +74,6 @@ export interface RegisterData {
   phone?: string;
 }
 
-export interface LoginData {
-  email: string;
-  password: string;
-}
-
 export const AuthAPI = {
   register: async (data: RegisterData) => {
     return apiRequest('/auth/register', {
@@ -86,17 +82,10 @@ export const AuthAPI = {
     });
   },
 
-  login: async (data: LoginData) => {
-    const result = await apiRequest<{ accessToken: string; user: any }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    
-    if (result.success && result.data?.accessToken) {
-      setAuthToken(result.data.accessToken);
-    }
-    
-    return result;
+  // Note: For Firebase, login is typically handled by Firebase Auth SDK on client side
+  // This function would be used after Firebase client-side login to store token
+  setToken: (token: string) => {
+    setAuthToken(token);
   },
 
   verify: async () => {

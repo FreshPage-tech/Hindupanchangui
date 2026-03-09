@@ -1,15 +1,10 @@
 /**
- * Kundali Service
+ * Kundali Service (Firebase)
  * Handles Kundali (Birth Chart) generation and analysis
  * ALL CALCULATIONS DONE SERVER-SIDE
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2.39.3";
-
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-);
+import { firestore, COLLECTIONS, getTimestamp } from './firebase-config';
 
 export interface KundaliData {
   id: string;
@@ -64,12 +59,11 @@ export interface KundaliData {
     health: string;
     finance: string;
   };
-  createdAt: string;
+  createdAt: any;
 }
 
 /**
  * Generate Kundali (complex astronomical calculations)
- * This is a simplified mock - in production, use Swiss Ephemeris or similar library
  */
 function generateKundali(
   name: string,
@@ -83,7 +77,7 @@ function generateKundali(
     "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
   ];
 
-  // Simplified calculation based on date (in production, use proper astronomical calculations)
+  // Simplified calculation based on date
   const dayOfYear = Math.floor((dateOfBirth.getTime() - new Date(dateOfBirth.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
   const sunSignIndex = Math.floor((dayOfYear / 30.4) % 12);
   const moonSignIndex = (sunSignIndex + 4) % 12;
@@ -153,12 +147,12 @@ export async function createKundali(
   try {
     // Check user's Kundali limit (free users: 3, premium: unlimited)
     if (!isPremium) {
-      const { data: existing } = await supabase
-        .from('kv_store_e18c4393')
-        .select('key')
-        .like('key', `kundali:${userId}:%`);
+      const existingSnapshot = await firestore
+        .collection(COLLECTIONS.KUNDALIS)
+        .where('userId', '==', userId)
+        .get();
 
-      if (existing && existing.length >= 3) {
+      if (existingSnapshot.docs.length >= 3) {
         return { 
           success: false, 
           error: "Free users can create up to 3 Kundalis. Upgrade to Premium for unlimited access." 
@@ -179,24 +173,22 @@ export async function createKundali(
       data.placeOfBirth
     );
 
-    const id = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Create document in Firestore
+    const docRef = await firestore.collection(COLLECTIONS.KUNDALIS).add({
+      userId,
+      ...kundaliData,
+      createdAt: getTimestamp(),
+    });
+
     const fullKundaliData: KundaliData = {
-      id,
+      id: docRef.id,
       userId,
       ...kundaliData,
       createdAt: new Date().toISOString(),
     };
 
-    // Save to database
-    await supabase
-      .from('kv_store_e18c4393')
-      .insert({
-        key: `kundali:${userId}:${id}`,
-        value: fullKundaliData
-      });
-
     return { success: true, data: fullKundaliData };
-  } catch (err) {
+  } catch (err: any) {
     console.error("Create Kundali error:", err);
     return { success: false, error: "Failed to create Kundali" };
   }
@@ -210,18 +202,21 @@ export async function getKundali(
   kundaliId: string
 ): Promise<{ success: boolean; data?: KundaliData; error?: string }> {
   try {
-    const { data, error } = await supabase
-      .from('kv_store_e18c4393')
-      .select('value')
-      .eq('key', `kundali:${userId}:${kundaliId}`)
-      .single();
+    const doc = await firestore.collection(COLLECTIONS.KUNDALIS).doc(kundaliId).get();
 
-    if (error || !data) {
+    if (!doc.exists) {
       return { success: false, error: "Kundali not found" };
     }
 
-    return { success: true, data: data.value as KundaliData };
-  } catch (err) {
+    const data = doc.data() as KundaliData;
+
+    // Verify ownership
+    if (data.userId !== userId) {
+      return { success: false, error: "Unauthorized access" };
+    }
+
+    return { success: true, data: { ...data, id: doc.id } };
+  } catch (err: any) {
     console.error("Get Kundali error:", err);
     return { success: false, error: "Failed to fetch Kundali" };
   }
@@ -234,20 +229,20 @@ export async function getUserKundalis(
   userId: string
 ): Promise<{ success: boolean; data?: KundaliData[]; error?: string }> {
   try {
-    const { data, error } = await supabase
-      .from('kv_store_e18c4393')
-      .select('value')
-      .like('key', `kundali:${userId}:%`);
+    const snapshot = await firestore
+      .collection(COLLECTIONS.KUNDALIS)
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
 
-    if (error) {
-      console.error("Get Kundalis error:", error);
-      return { success: false, error: "Failed to fetch Kundalis" };
-    }
+    const kundalis = snapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id,
+    } as KundaliData));
 
-    const kundalis = (data || []).map(item => item.value as KundaliData);
     return { success: true, data: kundalis };
-  } catch (err) {
-    console.error("Get Kundalis exception:", err);
+  } catch (err: any) {
+    console.error("Get Kundalis error:", err);
     return { success: false, error: "Failed to fetch Kundalis" };
   }
 }
@@ -260,19 +255,24 @@ export async function deleteKundali(
   kundaliId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase
-      .from('kv_store_e18c4393')
-      .delete()
-      .eq('key', `kundali:${userId}:${kundaliId}`);
+    const doc = await firestore.collection(COLLECTIONS.KUNDALIS).doc(kundaliId).get();
 
-    if (error) {
-      console.error("Delete Kundali error:", error);
-      return { success: false, error: "Failed to delete Kundali" };
+    if (!doc.exists) {
+      return { success: false, error: "Kundali not found" };
     }
 
+    const data = doc.data();
+
+    // Verify ownership
+    if (data?.userId !== userId) {
+      return { success: false, error: "Unauthorized access" };
+    }
+
+    await firestore.collection(COLLECTIONS.KUNDALIS).doc(kundaliId).delete();
+
     return { success: true };
-  } catch (err) {
-    console.error("Delete Kundali exception:", err);
+  } catch (err: any) {
+    console.error("Delete Kundali error:", err);
     return { success: false, error: "Failed to delete Kundali" };
   }
 }

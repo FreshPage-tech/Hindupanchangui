@@ -1,15 +1,10 @@
 /**
- * Panchang Service
+ * Panchang Service (Firebase)
  * Handles all Panchang calculations, calendar conversions, and astrological data
  * ALL BUSINESS LOGIC HAPPENS HERE - NOT IN FRONTEND
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2.39.3";
-
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-);
+import { firestore, COLLECTIONS, getTimestamp } from './firebase-config';
 
 export interface PanchangData {
   date: string;
@@ -108,33 +103,33 @@ export function calculatePanchang(date: Date, calendarType: string = 'hindu'): P
   ];
 
   const yogas = [
-    { name: "Vishkambha", type: "neutral" },
-    { name: "Preeti", type: "auspicious" },
-    { name: "Ayushman", type: "auspicious" },
-    { name: "Saubhagya", type: "auspicious" },
-    { name: "Shobhana", type: "auspicious" },
-    { name: "Atiganda", type: "inauspicious" },
-    { name: "Sukarma", type: "auspicious" },
-    { name: "Dhriti", type: "auspicious" },
-    { name: "Shoola", type: "inauspicious" },
-    { name: "Ganda", type: "inauspicious" },
-    { name: "Vriddhi", type: "auspicious" },
-    { name: "Dhruva", type: "auspicious" },
-    { name: "Vyaghata", type: "inauspicious" },
-    { name: "Harshana", type: "auspicious" },
-    { name: "Vajra", type: "inauspicious" },
-    { name: "Siddhi", type: "auspicious" },
-    { name: "Vyatipata", type: "inauspicious" },
-    { name: "Variyana", type: "auspicious" },
-    { name: "Parigha", type: "inauspicious" },
-    { name: "Shiva", type: "auspicious" },
-    { name: "Siddha", type: "auspicious" },
-    { name: "Sadhya", type: "auspicious" },
-    { name: "Shubha", type: "auspicious" },
-    { name: "Shukla", type: "auspicious" },
-    { name: "Brahma", type: "auspicious" },
-    { name: "Indra", type: "auspicious" },
-    { name: "Vaidhriti", type: "inauspicious" }
+    { name: "Vishkambha", type: "neutral" as const },
+    { name: "Preeti", type: "auspicious" as const },
+    { name: "Ayushman", type: "auspicious" as const },
+    { name: "Saubhagya", type: "auspicious" as const },
+    { name: "Shobhana", type: "auspicious" as const },
+    { name: "Atiganda", type: "inauspicious" as const },
+    { name: "Sukarma", type: "auspicious" as const },
+    { name: "Dhriti", type: "auspicious" as const },
+    { name: "Shoola", type: "inauspicious" as const },
+    { name: "Ganda", type: "inauspicious" as const },
+    { name: "Vriddhi", type: "auspicious" as const },
+    { name: "Dhruva", type: "auspicious" as const },
+    { name: "Vyaghata", type: "inauspicious" as const },
+    { name: "Harshana", type: "auspicious" as const },
+    { name: "Vajra", type: "inauspicious" as const },
+    { name: "Siddhi", type: "auspicious" as const },
+    { name: "Vyatipata", type: "inauspicious" as const },
+    { name: "Variyana", type: "auspicious" as const },
+    { name: "Parigha", type: "inauspicious" as const },
+    { name: "Shiva", type: "auspicious" as const },
+    { name: "Siddha", type: "auspicious" as const },
+    { name: "Sadhya", type: "auspicious" as const },
+    { name: "Shubha", type: "auspicious" as const },
+    { name: "Shukla", type: "auspicious" as const },
+    { name: "Brahma", type: "auspicious" as const },
+    { name: "Indra", type: "auspicious" as const },
+    { name: "Vaidhriti", type: "inauspicious" as const }
   ];
 
   const karanas = [
@@ -198,7 +193,7 @@ export function calculatePanchang(date: Date, calendarType: string = 'hindu'): P
       endTime: "3:45 AM (next day)",
     },
     nakshatra: nakshatras[nakshatraIndex],
-    yoga: yogas[yogaIndex] as any,
+    yoga: yogas[yogaIndex],
     karana: karanas[karanaIndex],
     vara: varas[dayOfWeek],
     maasa: hindiMonths[month],
@@ -226,7 +221,7 @@ export function calculatePanchang(date: Date, calendarType: string = 'hindu'): P
 }
 
 /**
- * Get Panchang data for a specific date
+ * Get Panchang data for a specific date (with caching)
  */
 export async function getPanchangForDate(
   dateString: string,
@@ -239,32 +234,50 @@ export async function getPanchangForDate(
       return { success: false, error: "Invalid date format" };
     }
 
+    // Check cache first
+    const cacheKey = `${dateString}_${calendarType}`;
+    const cachedDoc = await firestore
+      .collection(COLLECTIONS.PANCHANG_CACHE)
+      .doc(cacheKey)
+      .get();
+
+    if (cachedDoc.exists) {
+      const cachedData = cachedDoc.data();
+      return { success: true, data: cachedData as PanchangData };
+    }
+
+    // Calculate Panchang
     const panchangData = calculatePanchang(date, calendarType);
+
+    // Cache the result
+    await firestore
+      .collection(COLLECTIONS.PANCHANG_CACHE)
+      .doc(cacheKey)
+      .set({
+        ...panchangData,
+        cachedAt: getTimestamp(),
+      });
 
     // Log user access (analytics)
     if (userId) {
-      await supabase
-        .from('kv_store_e18c4393')
-        .insert({
-          key: `panchang_access:${userId}:${Date.now()}`,
-          value: {
-            userId,
-            date: dateString,
-            calendarType,
-            timestamp: new Date().toISOString(),
-          }
-        });
+      await firestore.collection(COLLECTIONS.ANALYTICS).add({
+        eventType: 'panchang_viewed',
+        userId,
+        date: dateString,
+        calendarType,
+        timestamp: getTimestamp(),
+      });
     }
 
     return { success: true, data: panchangData };
-  } catch (err) {
+  } catch (err: any) {
     console.error("Get Panchang error:", err);
     return { success: false, error: "Failed to calculate Panchang" };
   }
 }
 
 /**
- * Get Panchang data for date range (for calendar view)
+ * Get Panchang data for date range
  */
 export async function getPanchangRange(
   startDate: string,
@@ -295,7 +308,7 @@ export async function getPanchangRange(
     }
 
     return { success: true, data: panchangList };
-  } catch (err) {
+  } catch (err: any) {
     console.error("Get Panchang range error:", err);
     return { success: false, error: "Failed to calculate Panchang range" };
   }

@@ -1,14 +1,9 @@
 /**
- * User Management Service
+ * User Management Service (Firebase)
  * Handles user profile, preferences, and subscription management
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2.39.3";
-
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-);
+import { firestore, COLLECTIONS, getTimestamp } from './firebase-config';
 
 export interface UserProfile {
   userId: string;
@@ -30,13 +25,13 @@ export interface UserProfile {
   };
   subscription: {
     plan: 'free' | 'premium';
-    startDate?: string;
-    endDate?: string;
+    startDate?: any;
+    endDate?: any;
     features: string[];
   };
   role: 'user' | 'admin';
-  createdAt: string;
-  updatedAt: string;
+  createdAt: any;
+  updatedAt: any;
 }
 
 /**
@@ -44,18 +39,14 @@ export interface UserProfile {
  */
 export async function getUserProfile(userId: string): Promise<{ success: boolean; data?: UserProfile; error?: string }> {
   try {
-    const { data, error } = await supabase
-      .from('kv_store_e18c4393')
-      .select('value')
-      .eq('key', `user:${userId}`)
-      .single();
+    const userDoc = await firestore.collection(COLLECTIONS.USERS).doc(userId).get();
 
-    if (error || !data) {
+    if (!userDoc.exists) {
       return { success: false, error: "User not found" };
     }
 
-    return { success: true, data: data.value as UserProfile };
-  } catch (err) {
+    return { success: true, data: userDoc.data() as UserProfile };
+  } catch (err: any) {
     console.error("Get user profile error:", err);
     return { success: false, error: "Failed to fetch user profile" };
   }
@@ -69,34 +60,24 @@ export async function updateUserProfile(
   updates: Partial<UserProfile>
 ): Promise<{ success: boolean; data?: UserProfile; error?: string }> {
   try {
-    // Get current profile
-    const currentProfile = await getUserProfile(userId);
-    if (!currentProfile.success || !currentProfile.data) {
-      return { success: false, error: "User not found" };
-    }
+    // Prevent changing sensitive fields
+    delete (updates as any).userId;
+    delete (updates as any).role;
+    delete (updates as any).createdAt;
 
-    // Merge updates
-    const updatedProfile = {
-      ...currentProfile.data,
+    // Add updated timestamp
+    const updateData = {
       ...updates,
-      userId, // Ensure userId cannot be changed
-      updatedAt: new Date().toISOString(),
+      updatedAt: getTimestamp(),
     };
 
-    // Save to database
-    const { error } = await supabase
-      .from('kv_store_e18c4393')
-      .update({ value: updatedProfile })
-      .eq('key', `user:${userId}`);
+    await firestore.collection(COLLECTIONS.USERS).doc(userId).update(updateData);
 
-    if (error) {
-      console.error("Update profile error:", error);
-      return { success: false, error: "Failed to update profile" };
-    }
-
-    return { success: true, data: updatedProfile };
-  } catch (err) {
-    console.error("Update profile exception:", err);
+    // Get updated profile
+    const profile = await getUserProfile(userId);
+    return profile;
+  } catch (err: any) {
+    console.error("Update profile error:", err);
     return { success: false, error: "Failed to update profile" };
   }
 }
@@ -110,13 +91,8 @@ export async function updateSubscription(
   duration?: number // in days
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    const profile = await getUserProfile(userId);
-    if (!profile.success || !profile.data) {
-      return { success: false, error: "User not found" };
-    }
-
     const startDate = new Date();
-    const endDate = duration ? new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000) : undefined;
+    const endDate = duration ? new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000) : null;
 
     const subscriptionData = {
       plan,
@@ -128,31 +104,23 @@ export async function updateSubscription(
     };
 
     // Update subscription in user profile
-    const updated = await updateUserProfile(userId, {
+    await firestore.collection(COLLECTIONS.USERS).doc(userId).update({
       subscription: subscriptionData,
+      updatedAt: getTimestamp(),
     });
 
-    if (!updated.success) {
-      return { success: false, error: "Failed to update subscription" };
-    }
-
     // Log subscription change
-    await supabase
-      .from('kv_store_e18c4393')
-      .insert({
-        key: `subscription_log:${userId}:${Date.now()}`,
-        value: {
-          userId,
-          plan,
-          startDate: startDate.toISOString(),
-          endDate: endDate?.toISOString(),
-          timestamp: new Date().toISOString(),
-        }
-      });
+    await firestore.collection(COLLECTIONS.SUBSCRIPTIONS).add({
+      userId,
+      plan,
+      startDate: startDate.toISOString(),
+      endDate: endDate?.toISOString(),
+      timestamp: getTimestamp(),
+    });
 
     return { success: true, data: subscriptionData };
-  } catch (err) {
-    console.error("Update subscription exception:", err);
+  } catch (err: any) {
+    console.error("Update subscription error:", err);
     return { success: false, error: "Failed to update subscription" };
   }
 }
@@ -183,8 +151,8 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
     }
 
     return true;
-  } catch (err) {
-    console.error("Check premium access exception:", err);
+  } catch (err: any) {
+    console.error("Check premium access error:", err);
     return false;
   }
 }
@@ -207,13 +175,14 @@ export async function updatePreferences(
       ...preferences,
     };
 
-    const updated = await updateUserProfile(userId, {
+    await firestore.collection(COLLECTIONS.USERS).doc(userId).update({
       preferences: updatedPreferences,
+      updatedAt: getTimestamp(),
     });
 
-    return updated;
-  } catch (err) {
-    console.error("Update preferences exception:", err);
+    return { success: true, data: { preferences: updatedPreferences } };
+  } catch (err: any) {
+    console.error("Update preferences error:", err);
     return { success: false, error: "Failed to update preferences" };
   }
 }
@@ -223,37 +192,38 @@ export async function updatePreferences(
  */
 export async function deleteUserAccount(userId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    // Delete user from auth
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-    if (authError) {
-      console.error("Delete auth user error:", authError);
-      return { success: false, error: "Failed to delete user account" };
-    }
+    // Delete user data from Firestore
+    await firestore.collection(COLLECTIONS.USERS).doc(userId).delete();
 
-    // Delete user data
-    const { error: dataError } = await supabase
-      .from('kv_store_e18c4393')
-      .delete()
-      .eq('key', `user:${userId}`);
+    // Delete user's Kundalis
+    const kundalisSnapshot = await firestore
+      .collection(COLLECTIONS.KUNDALIS)
+      .where('userId', '==', userId)
+      .get();
 
-    if (dataError) {
-      console.error("Delete user data error:", dataError);
-    }
-
-    // Delete user-related data (kundali, favorites, etc.)
-    await supabase
-      .from('kv_store_e18c4393')
-      .delete()
-      .like('key', `kundali:${userId}:%`);
-
-    await supabase
-      .from('kv_store_e18c4393')
-      .delete()
-      .like('key', `favorite:${userId}:%`);
+    const batch = firestore.batch();
+    kundalisSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
 
     return { success: true };
-  } catch (err) {
-    console.error("Delete account exception:", err);
+  } catch (err: any) {
+    console.error("Delete account error:", err);
     return { success: false, error: "Failed to delete account" };
+  }
+}
+
+/**
+ * Get all users (admin only)
+ */
+export async function getAllUsers(): Promise<{ success: boolean; data?: UserProfile[]; error?: string }> {
+  try {
+    const snapshot = await firestore.collection(COLLECTIONS.USERS).get();
+    const users = snapshot.docs.map(doc => doc.data() as UserProfile);
+    return { success: true, data: users };
+  } catch (err: any) {
+    console.error("Get all users error:", err);
+    return { success: false, error: "Failed to fetch users" };
   }
 }
