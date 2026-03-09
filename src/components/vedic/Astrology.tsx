@@ -3,7 +3,8 @@ import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
-import { Star, TrendingUp, Heart, Briefcase, DollarSign, Users } from "lucide-react";
+import { Star, TrendingUp, Heart, Briefcase, DollarSign, Users, Lock, AlertCircle, Lightbulb, ChevronRight } from "lucide-react";
+import { toast } from "sonner@2.0.3";
 
 interface AstrologyProps {
   onNavigate: (screen: string) => void;
@@ -34,6 +35,77 @@ export function Astrology({ onNavigate }: AstrologyProps) {
       </div>
 
       <div className="p-4 space-y-4">
+        {/* Awareness Card - Shani Sade Sati */}
+        <Card className="p-4 border border-orange-200 bg-gradient-to-br from-orange-50 to-white">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+            </div>
+            <div className="flex-1">
+              <Badge className="bg-orange-500 text-white mb-2">Current Phase</Badge>
+              <h3 className="text-[#2C2C2C] mb-2">Shani Sade Sati Phase</h3>
+              <p className="text-sm text-[#6B6B6B] mb-3">
+                This period may bring challenges but also significant growth. Your karma and actions influence the outcome. Embrace patience and discipline.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => toast.success("Full article opened")}
+            variant="outline"
+            className="w-full border-gray-200"
+          >
+            Read More
+            <ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
+        </Card>
+
+        {/* Did You Know? Card */}
+        <Card className="p-4 border border-[#C74225]/20 bg-gradient-to-br from-[#C74225]/5 to-white">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-10 h-10 bg-[#C74225]/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <Lightbulb className="h-5 w-5 text-[#C74225]" />
+            </div>
+            <div className="flex-1">
+              <Badge className="bg-[#C74225] text-white mb-2">Did You Know?</Badge>
+              <p className="text-sm text-[#2C2C2C] mb-1">
+                People born under Rohini Nakshatra often have strong creativity and artistic talents.
+              </p>
+              <button
+                onClick={() => onNavigate("premium")}
+                className="text-sm text-[#C74225] hover:underline flex items-center gap-1 mt-2"
+              >
+                Unlock Full Insight
+                <Lock className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+        </Card>
+
+        {/* Advanced Tools */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card
+            onClick={() => onNavigate("kundali")}
+            className="p-4 border border-gray-100 cursor-pointer hover:border-[#C74225] transition-all"
+          >
+            <div className="w-10 h-10 bg-[#C74225]/10 rounded-full flex items-center justify-center mb-3">
+              <Star className="h-5 w-5 text-[#C74225]" />
+            </div>
+            <h4 className="text-[#2C2C2C] mb-1">Kundali</h4>
+            <p className="text-xs text-[#6B6B6B]">Generate birth chart</p>
+          </Card>
+
+          <Card
+            onClick={() => onNavigate("compatibility")}
+            className="p-4 border border-gray-100 cursor-pointer hover:border-[#C74225] transition-all"
+          >
+            <div className="w-10 h-10 bg-[#C74225]/10 rounded-full flex items-center justify-center mb-3">
+              <Heart className="h-5 w-5 text-[#C74225]" />
+            </div>
+            <h4 className="text-[#2C2C2C] mb-1">Compatibility</h4>
+            <p className="text-xs text-[#6B6B6B]">Check relationship</p>
+          </Card>
+        </div>
+
         {/* Date Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-gray-50">
@@ -186,15 +258,59 @@ export function Astrology({ onNavigate }: AstrologyProps) {
                 </div>
               </div>
             </Card>
+
+            {/* Premium Weekly Content */}
+            <Card className="p-4 border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/10 to-white">
+              <div className="flex items-center gap-2 mb-3">
+                <Lock className="h-5 w-5 text-[#D4AF37]" />
+                <Badge className="bg-[#D4AF37] text-white">Premium</Badge>
+              </div>
+              <h4 className="text-[#2C2C2C] mb-2">Detailed Weekly Analysis</h4>
+              <div className="relative mb-3">
+                <p className="text-sm text-[#6B6B6B] blur-sm select-none">
+                  Deep insights into career progression, financial planning, relationship dynamics, and health considerations for the week...
+                </p>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white"></div>
+              </div>
+              <Button
+                onClick={() => onNavigate("premium")}
+                className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-white"
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                Unlock Weekly Report
+              </Button>
+            </Card>
           </TabsContent>
 
           <TabsContent value="monthly" className="space-y-4 mt-4">
             <Card className="p-4 border-l-4 border-[#C74225]">
               <h3 className="text-[#2C2C2C] mb-3">Monthly Forecast</h3>
               <p className="text-[#6B6B6B] text-sm leading-relaxed">
-                November 2025 marks a transformative period. Jupiter's transit brings growth opportunities while Saturn 
+                March 2026 marks a transformative period. Jupiter's transit brings growth opportunities while Saturn 
                 teaches important life lessons. Focus on building lasting foundations.
               </p>
+            </Card>
+
+            {/* Premium Monthly Content */}
+            <Card className="p-4 border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/10 to-white">
+              <div className="flex items-center gap-2 mb-3">
+                <Lock className="h-5 w-5 text-[#D4AF37]" />
+                <Badge className="bg-[#D4AF37] text-white">Premium</Badge>
+              </div>
+              <h4 className="text-[#2C2C2C] mb-2">Complete Monthly Guide</h4>
+              <div className="relative mb-3">
+                <p className="text-sm text-[#6B6B6B] blur-sm select-none">
+                  Comprehensive month-by-month breakdown with planetary transits, important dates, career milestones, relationship opportunities...
+                </p>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white"></div>
+              </div>
+              <Button
+                onClick={() => onNavigate("premium")}
+                className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-white"
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                Unlock Monthly Report
+              </Button>
             </Card>
           </TabsContent>
         </Tabs>

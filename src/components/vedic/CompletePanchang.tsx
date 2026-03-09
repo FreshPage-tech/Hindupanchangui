@@ -5,6 +5,7 @@ import { Badge } from "../ui/badge";
 import { Calendar as CalendarComponent } from "../ui/calendar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import { Separator } from "../ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -14,7 +15,8 @@ import {
   Clock, 
   AlertTriangle,
   Info,
-  Globe
+  Globe,
+  ChevronDown
 } from "lucide-react";
 
 interface CompletePanchangProps {
@@ -135,82 +137,229 @@ function getDurMuhurtam(): string[] {
 
 export function CompletePanchang({ onBack }: CompletePanchangProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarType, setCalendarType] = useState("hindu");
+  const [showCalendar, setShowCalendar] = useState(false);
   const panchangData = calculateHinduCalendar(selectedDate);
+
+  const calendarTypes = [
+    { value: "hindu", label: "Hindu Calendar (Vikram Samvat)", icon: "🕉️" },
+    { value: "vedic", label: "Vedic Calendar", icon: "📿" },
+    { value: "tamil", label: "Tamil Calendar (Tamil Panchangam)", icon: "🛕" },
+    { value: "bengali", label: "Bengali Calendar (Bengali San)", icon: "🎭" },
+    { value: "gujarati", label: "Gujarati Calendar", icon: "🪔" },
+    { value: "kannada", label: "Kannada Calendar", icon: "🌺" },
+    { value: "malayalam", label: "Malayalam Calendar (Kollavarsham)", icon: "🥥" },
+    { value: "telugu", label: "Telugu Calendar", icon: "🌸" },
+    { value: "marathi", label: "Marathi Calendar (Shalivahana Shaka)", icon: "🪷" },
+    { value: "oriya", label: "Oriya Calendar", icon: "🏛️" },
+    { value: "punjabi", label: "Punjabi Calendar (Nanakshahi)", icon: "⭐" },
+    { value: "jain", label: "Jain Calendar (Vira Nirvana Samvat)", icon: "☸️" },
+  ];
+
+  const getCalendarInfo = () => {
+    const calendarData: Record<string, any> = {
+      hindu: {
+        name: "Hindu Calendar",
+        year: panchangData.vikramSamvat,
+        yearLabel: "Vikram Samvat",
+        month: panchangData.maasa,
+        description: "Traditional Hindu lunisolar calendar"
+      },
+      vedic: {
+        name: "Vedic Calendar",
+        year: panchangData.vikramSamvat,
+        yearLabel: "Vedic Year",
+        month: panchangData.maasa,
+        description: "Ancient Vedic astronomical calendar"
+      },
+      tamil: {
+        name: "Tamil Calendar",
+        year: panchangData.sakaSamvat + 1942,
+        yearLabel: "Tamil Year",
+        month: ["Chithirai", "Vaikasi", "Aani", "Aadi", "Aavani", "Purattasi", "Aippasi", "Karthigai", "Margazhi", "Thai", "Maasi", "Panguni"][selectedDate.getMonth()],
+        description: "Traditional Tamil solar calendar"
+      },
+      bengali: {
+        name: "Bengali Calendar",
+        year: selectedDate.getFullYear() - 593,
+        yearLabel: "Bengali San",
+        month: ["Boishakh", "Joishtho", "Asharh", "Shravan", "Bhadro", "Ashwin", "Kartik", "Agrohayon", "Poush", "Magh", "Falgun", "Choitro"][selectedDate.getMonth()],
+        description: "Bengali solar calendar system"
+      },
+      gujarati: {
+        name: "Gujarati Calendar",
+        year: panchangData.vikramSamvat,
+        yearLabel: "Vikram Samvat",
+        month: panchangData.maasa,
+        description: "Gujarati lunisolar calendar"
+      },
+      kannada: {
+        name: "Kannada Calendar",
+        year: panchangData.sakaSamvat,
+        yearLabel: "Shalivahana Shaka",
+        month: panchangData.maasa,
+        description: "Traditional Kannada calendar"
+      },
+      malayalam: {
+        name: "Malayalam Calendar",
+        year: selectedDate.getFullYear() - 824,
+        yearLabel: "Kollavarsham",
+        month: ["Chingam", "Kanni", "Thulam", "Vrischikam", "Dhanu", "Makaram", "Kumbham", "Meenam", "Medam", "Edavam", "Midhunam", "Karkidakam"][selectedDate.getMonth()],
+        description: "Kerala traditional solar calendar"
+      },
+      telugu: {
+        name: "Telugu Calendar",
+        year: panchangData.sakaSamvat,
+        yearLabel: "Shalivahana Shaka",
+        month: panchangData.maasa,
+        description: "Traditional Telugu calendar"
+      },
+      marathi: {
+        name: "Marathi Calendar",
+        year: panchangData.sakaSamvat,
+        yearLabel: "Shalivahana Shaka",
+        month: panchangData.maasa,
+        description: "Marathi lunisolar calendar"
+      },
+      oriya: {
+        name: "Oriya Calendar",
+        year: panchangData.sakaSamvat,
+        yearLabel: "Anka Year",
+        month: panchangData.maasa,
+        description: "Traditional Odia calendar"
+      },
+      punjabi: {
+        name: "Punjabi Calendar",
+        year: selectedDate.getFullYear() - 1469,
+        yearLabel: "Nanakshahi",
+        month: ["Chet", "Vaisakh", "Jeth", "Harh", "Sawan", "Bhadon", "Assu", "Katak", "Maghar", "Poh", "Magh", "Phagun"][selectedDate.getMonth()],
+        description: "Sikh Nanakshahi calendar"
+      },
+      jain: {
+        name: "Jain Calendar",
+        year: selectedDate.getFullYear() + 527,
+        yearLabel: "Vira Nirvana Samvat",
+        month: panchangData.maasa,
+        description: "Jain religious calendar"
+      },
+    };
+    return calendarData[calendarType];
+  };
+
+  const currentCalendarInfo = getCalendarInfo();
 
   return (
     <div className="min-h-screen bg-white pb-20">
       {/* Header */}
-      <div className="bg-white p-6 border-b border-gray-100">
+      <div className="bg-gradient-to-br from-[#C74225] to-[#942D17] text-white p-6">
         <button onClick={onBack} className="mb-4 hover:opacity-70 transition-opacity">
-          <ArrowLeft className="h-6 w-6 text-[#2C2C2C]" />
+          <ArrowLeft className="h-6 w-6 text-white" />
         </button>
-        <h1 className="text-[#2C2C2C] mb-1">Complete Panchang</h1>
-        <p className="text-[#6B6B6B]">Detailed Hindu Calendar Calculator</p>
+        <h1 className="text-white mb-1">Complete Panchang</h1>
+        <p className="text-white/90 text-sm">Detailed Multi-Calendar System</p>
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Calendar Date Selector */}
-        <Card className="p-4 border border-gray-100">
-          <h3 className="text-[#2C2C2C] mb-3 flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-[#C74225]" />
-            Select Date
-          </h3>
-          <CalendarComponent
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            className="rounded-md border-0"
-          />
+        {/* Calendar Type Selector */}
+        <Card className="p-4 border-l-4 border-[#C74225] bg-gradient-to-r from-[#C74225]/5 to-white">
+          <div className="flex items-center gap-3 mb-3">
+            <Globe className="h-5 w-5 text-[#C74225]" />
+            <h3 className="text-[#2C2C2C]">Select Calendar System</h3>
+          </div>
+          <Select value={calendarType} onValueChange={setCalendarType}>
+            <SelectTrigger className="w-full bg-white border-gray-200">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              {calendarTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  <span className="flex items-center gap-2">
+                    <span>{type.icon}</span>
+                    <span>{type.label}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-[#6B6B6B] mt-2">
+            {currentCalendarInfo.description}
+          </p>
         </Card>
 
-        {/* Gregorian vs Hindu Calendar Comparison */}
-        <Card className="p-4 border-l-4 border-[#C74225]">
-          <div className="flex items-center gap-2 mb-4">
-            <Globe className="h-5 w-5 text-[#C74225]" />
-            <h3 className="text-[#2C2C2C]">Calendar Comparison</h3>
+        {/* Date Picker */}
+        <Card className="p-4 border border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[#2C2C2C] flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-[#C74225]" />
+              Select Date
+            </h3>
+            <Button
+              onClick={() => setShowCalendar(!showCalendar)}
+              variant="outline"
+              size="sm"
+            >
+              {showCalendar ? "Hide" : "Show"} Calendar
+            </Button>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            {/* Gregorian Calendar */}
-            <div className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs text-[#6B6B6B] mb-2">Gregorian Calendar</div>
-              <div className="text-[#2C2C2C] mb-1">
-                {selectedDate.toLocaleDateString('en-US', { 
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </div>
-              <div className="text-sm text-[#6B6B6B]">
-                CE {selectedDate.getFullYear()}
-              </div>
+          <div className="text-center p-4 bg-gradient-to-br from-[#C74225]/5 to-gray-50 rounded-lg border border-[#C74225]/20">
+            <div className="text-2xl text-[#C74225] mb-2">
+              {selectedDate.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
             </div>
-
-            {/* Hindu Calendar */}
-            <div className="bg-[#C74225]/5 rounded-lg p-3 border border-[#C74225]/20">
-              <div className="text-xs text-[#6B6B6B] mb-2">Hindu Calendar</div>
-              <div className="text-[#2C2C2C] mb-1">
-                {panchangData.tithi}, {panchangData.maasa}
-              </div>
-              <div className="text-sm text-[#6B6B6B]">
-                Vikram Samvat {panchangData.vikramSamvat}
-              </div>
+            <div className="flex gap-2 justify-center mt-3">
+              <Button 
+                onClick={() => setSelectedDate(new Date())}
+                variant="outline"
+                size="sm"
+              >
+                Today
+              </Button>
+              <Button 
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setDate(newDate.getDate() - 1);
+                  setSelectedDate(newDate);
+                }}
+                variant="outline"
+                size="sm"
+              >
+                Previous Day
+              </Button>
+              <Button 
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setDate(newDate.getDate() + 1);
+                  setSelectedDate(newDate);
+                }}
+                variant="outline"
+                size="sm"
+              >
+                Next Day
+              </Button>
             </div>
           </div>
 
-          <Separator className="my-3" />
-
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <div className="text-xs text-[#6B6B6B] mb-1">Saka Samvat</div>
-              <div className="text-[#2C2C2C]">{panchangData.sakaSamvat}</div>
+          {/* Calendar Component */}
+          {showCalendar && (
+            <div className="mt-4 flex justify-center">
+              <CalendarComponent
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setSelectedDate(date);
+                    setShowCalendar(false);
+                  }
+                }}
+                className="rounded-md border"
+              />
             </div>
-            <div>
-              <div className="text-xs text-[#6B6B6B] mb-1">Season</div>
-              <div className="text-[#2C2C2C]">{panchangData.ritu}</div>
-            </div>
-          </div>
+          )}
         </Card>
 
         {/* Main Panchang Elements */}
@@ -439,6 +588,63 @@ export function CompletePanchang({ onBack }: CompletePanchangProps) {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Gregorian vs Selected Calendar Comparison */}
+        <Card className="p-4 border-l-4 border-[#C74225]">
+          <div className="flex items-center gap-2 mb-4">
+            <Globe className="h-5 w-5 text-[#C74225]" />
+            <h3 className="text-[#2C2C2C]">Calendar Comparison</h3>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {/* Gregorian Calendar */}
+            <div className="bg-gray-50 rounded-lg p-3">
+              <div className="text-xs text-[#6B6B6B] mb-2">Gregorian Calendar</div>
+              <div className="text-[#2C2C2C] text-sm mb-1">
+                {selectedDate.toLocaleDateString('en-US', { 
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </div>
+              <div className="text-xs text-[#6B6B6B]">
+                CE {selectedDate.getFullYear()}
+              </div>
+            </div>
+
+            {/* Selected Regional Calendar */}
+            <div className="bg-[#C74225]/5 rounded-lg p-3 border border-[#C74225]/20">
+              <div className="text-xs text-[#6B6B6B] mb-2">{currentCalendarInfo.name}</div>
+              <div className="text-[#2C2C2C] text-sm mb-1">
+                {currentCalendarInfo.month}
+              </div>
+              <div className="text-xs text-[#6B6B6B]">
+                {currentCalendarInfo.yearLabel} {currentCalendarInfo.year}
+              </div>
+            </div>
+          </div>
+
+          <Separator className="my-3" />
+
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <div className="text-xs text-[#6B6B6B] mb-1">Vikram Samvat</div>
+              <div className="text-[#2C2C2C]">{panchangData.vikramSamvat}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[#6B6B6B] mb-1">Saka Samvat</div>
+              <div className="text-[#2C2C2C]">{panchangData.sakaSamvat}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[#6B6B6B] mb-1">Season (Ritu)</div>
+              <div className="text-[#2C2C2C]">{panchangData.ritu}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[#6B6B6B] mb-1">Weekday</div>
+              <div className="text-[#2C2C2C]">{panchangData.vara}</div>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

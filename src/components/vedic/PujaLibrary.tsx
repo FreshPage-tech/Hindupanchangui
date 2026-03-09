@@ -3,14 +3,15 @@ import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
-import { Search, BookOpen, Play, FileText, Headphones, Video } from "lucide-react";
+import { Search, BookOpen, Play, FileText, Headphones, Video, ArrowLeft } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 
 interface PujaLibraryProps {
+  onBack: () => void;
   onNavigate: (screen: string, data?: any) => void;
 }
 
-export function PujaLibrary({ onNavigate }: PujaLibraryProps) {
+export function PujaLibrary({ onBack, onNavigate }: PujaLibraryProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const pujaGuides = [

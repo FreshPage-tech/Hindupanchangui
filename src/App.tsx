@@ -11,6 +11,9 @@ import { PujaLibrary } from "./components/vedic/PujaLibrary";
 import { VedicProfile } from "./components/vedic/VedicProfile";
 import { Notifications } from "./components/vedic/Notifications";
 import { VedicBottomNav } from "./components/vedic/VedicBottomNav";
+import { KundaliGenerator } from "./components/vedic/KundaliGenerator";
+import { ZodiacCompatibility } from "./components/vedic/ZodiacCompatibility";
+import { Premium } from "./components/vedic/Premium";
 import { Toaster } from "./components/ui/sonner";
 
 export default function App() {
@@ -30,19 +33,21 @@ export default function App() {
     setSelectedData(null);
   };
 
+  // Render Mobile App (User-facing)
   if (!hasCompletedOnboarding) {
     return (
       <>
+        <Toaster position="top-center" richColors />
         <Onboarding onComplete={() => setHasCompletedOnboarding(true)} />
-        <Toaster />
       </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF8E7]">
-      {/* Main Content Area */}
-      <div className="max-w-md mx-auto bg-[#FFF8E7] min-h-screen shadow-xl">
+    <>
+      <Toaster position="top-center" richColors />
+      
+      <div className="relative">
         {currentScreen === "dashboard" && (
           <VedicDashboard onNavigate={handleNavigation} />
         )}
@@ -51,31 +56,39 @@ export default function App() {
           <PanchangDetail onBack={handleBack} />
         )}
         
-        {currentScreen === "completePanchang" && (
+        {currentScreen === "complete-panchang" && (
           <CompletePanchang onBack={handleBack} />
         )}
         
-        {currentScreen === "festivalDetail" && (
-          <FestivalDetail onBack={handleBack} onNavigate={handleNavigation} />
-        )}
-        
-        {currentScreen === "calendar" && (
-          <FestivalCalendar 
+        {currentScreen === "festival-detail" && (
+          <FestivalDetail 
             onBack={handleBack} 
-            onViewFestival={(festivalId) => handleNavigation("festivalDetail", { festivalId })}
+            festival={selectedData}
           />
         )}
         
+        {currentScreen === "festival-calendar" && (
+          <FestivalCalendar onBack={handleBack} onNavigate={handleNavigation} />
+        )}
+        
         {currentScreen === "astrology" && (
-          <Astrology onNavigate={handleNavigation} />
+          <Astrology onBack={handleBack} onNavigate={handleNavigation} />
         )}
         
-        {currentScreen === "shop" && (
-          <PujaShop onNavigate={handleNavigation} />
+        {currentScreen === "kundali" && (
+          <KundaliGenerator onBack={handleBack} />
         )}
         
-        {currentScreen === "pujaLibrary" && (
-          <PujaLibrary onNavigate={handleNavigation} />
+        {currentScreen === "compatibility" && (
+          <ZodiacCompatibility onBack={handleBack} />
+        )}
+        
+        {currentScreen === "puja-library" && (
+          <PujaLibrary onBack={handleBack} onNavigate={handleNavigation} />
+        )}
+        
+        {currentScreen === "puja-shop" && (
+          <PujaShop onBack={handleBack} />
         )}
         
         {currentScreen === "profile" && (
@@ -85,15 +98,19 @@ export default function App() {
         {currentScreen === "notifications" && (
           <Notifications onBack={handleBack} onNavigate={handleNavigation} />
         )}
+        
+        {currentScreen === "premium" && (
+          <Premium onBack={handleBack} />
+        )}
 
-        {/* Bottom Navigation */}
-        <VedicBottomNav 
-          activeScreen={currentScreen} 
-          onNavigate={handleNavigation} 
-        />
+        {/* Bottom Navigation - Only show on main screens */}
+        {["dashboard", "complete-panchang", "festival-calendar", "astrology", "puja-library", "puja-shop"].includes(currentScreen) && (
+          <VedicBottomNav 
+            activeScreen={currentScreen} 
+            onNavigate={handleNavigation} 
+          />
+        )}
       </div>
-
-      <Toaster />
-    </div>
+    </>
   );
 }

@@ -11,15 +11,35 @@ import {
   Share2, 
   Play,
   BookOpen,
-  Sparkles
+  Sparkles,
+  ShoppingBag
 } from "lucide-react";
+import { AudioPlayer } from "./AudioPlayer";
+import { toast } from "sonner@2.0.3";
 
 interface FestivalDetailProps {
   onBack: () => void;
+  onNavigate: (screen: string) => void;
 }
 
-export function FestivalDetail({ onBack }: FestivalDetailProps) {
+export function FestivalDetail({ onBack, onNavigate }: FestivalDetailProps) {
   const [reminderSet, setReminderSet] = useState(false);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+
+  const handleShare = () => {
+    toast.success("Festival details shared!");
+  };
+
+  const handleSetReminder = () => {
+    setReminderSet(!reminderSet);
+    if (!reminderSet) {
+      toast.success("Reminder set for Lakshmi Puja");
+    }
+  };
+
+  const handlePlayAudio = (mantraName: string) => {
+    setPlayingAudio(mantraName);
+  };
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -37,6 +57,7 @@ export function FestivalDetail({ onBack }: FestivalDetailProps) {
         </button>
 
         <button
+          onClick={handleShare}
           className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100"
         >
           <Share2 className="h-5 w-5 text-[#2C2C2C]" />
@@ -71,25 +92,37 @@ export function FestivalDetail({ onBack }: FestivalDetailProps) {
           </div>
         </div>
 
-        {/* Reminder Button */}
-        <Button
-          onClick={() => setReminderSet(!reminderSet)}
-          className={`w-full ${
-            reminderSet
-              ? "bg-green-600 hover:bg-green-700"
-              : "bg-[#C74225] hover:bg-[#C74225]/90"
-          } text-white`}
-        >
-          <Bell className="h-4 w-4 mr-2" />
-          {reminderSet ? "✓ Reminder Set" : "Set Reminder"}
-        </Button>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            onClick={handleSetReminder}
+            className={`${
+              reminderSet
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-[#C74225] hover:bg-[#C74225]/90"
+            } text-white`}
+          >
+            <Bell className="h-4 w-4 mr-2" />
+            {reminderSet ? "✓ Reminder Set" : "Set Reminder"}
+          </Button>
+          
+          <Button
+            onClick={handleShare}
+            variant="outline"
+            className="border-gray-200"
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Share
+          </Button>
+        </div>
 
         {/* Tabs */}
         <Tabs defaultValue="about" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-50">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-50">
             <TabsTrigger value="about">About</TabsTrigger>
             <TabsTrigger value="puja">Puja Steps</TabsTrigger>
             <TabsTrigger value="mantras">Mantras</TabsTrigger>
+            <TabsTrigger value="aarti">Aarti</TabsTrigger>
           </TabsList>
 
           <TabsContent value="about" className="space-y-4 mt-4">
@@ -166,7 +199,11 @@ export function FestivalDetail({ onBack }: FestivalDetailProps) {
                   </p>
                 </div>
               </div>
-              <Button variant="outline" className="w-full mt-3 border-[#C74225] text-[#C74225]">
+              <Button 
+                onClick={() => handlePlayAudio("Lakshmi Gayatri Mantra")}
+                variant="outline" 
+                className="w-full mt-3 border-[#C74225] text-[#C74225]"
+              >
                 <Play className="h-4 w-4 mr-2" />
                 Play Audio
               </Button>
@@ -182,10 +219,40 @@ export function FestivalDetail({ onBack }: FestivalDetailProps) {
                 Om Shreem Hreem Shreem Kamale Kamalaleye Praseed Praseed.<br />
                 Om Shreem Hreem Shreem Mahalakshmyai Namah.
               </p>
-              <Button variant="outline" className="w-full border-[#C74225] text-[#C74225]">
+              <Button 
+                onClick={() => handlePlayAudio("Lakshmi Beej Mantra")}
+                variant="outline" 
+                className="w-full border-[#C74225] text-[#C74225]"
+              >
                 <Play className="h-4 w-4 mr-2" />
                 Play Audio
               </Button>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="aarti" className="space-y-3 mt-4">
+            <Card className="p-4 border border-gray-100">
+              <h4 className="text-[#2C2C2C] mb-3">Lakshmi Aarti</h4>
+              <div className="space-y-2 mb-4 text-sm text-[#2C2C2C] leading-relaxed">
+                <p>ॐ जय लक्ष्मी माता, मैया जय लक्ष्मी माता।</p>
+                <p>तुमको निसदिन सेवत, हर विष्णु विधाता॥</p>
+                <Separator className="my-3" />
+                <p>उमा रमा ब्रह्माणी, तुम ही जग माता।</p>
+                <p>सूर्य चन्द्रमा ध्यावत, नारद ऋषि गाता॥</p>
+              </div>
+              <Button 
+                onClick={() => handlePlayAudio("Lakshmi Aarti")}
+                className="w-full bg-[#C74225] hover:bg-[#C74225]/90 text-white"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Play Aarti Audio
+              </Button>
+            </Card>
+
+            <Card className="p-4 bg-[#C74225]/5 border border-[#C74225]/20">
+              <p className="text-sm text-[#6B6B6B] mb-3">
+                💡 Pro Tip: Play this aarti during your puja for the complete devotional experience
+              </p>
             </Card>
           </TabsContent>
         </Tabs>
@@ -205,12 +272,24 @@ export function FestivalDetail({ onBack }: FestivalDetailProps) {
             ))}
           </div>
           <Button 
+            onClick={() => onNavigate("shop")}
             className="w-full mt-4 bg-[#C74225] hover:bg-[#C74225]/90 text-white"
           >
-            Shop Puja Items
+            <ShoppingBag className="h-4 w-4 mr-2" />
+            Buy Puja Kit - ₹499
           </Button>
         </Card>
       </div>
+
+      {/* Floating Audio Player */}
+      {playingAudio && (
+        <AudioPlayer
+          title={playingAudio}
+          subtitle="Lakshmi Puja"
+          onClose={() => setPlayingAudio(null)}
+          mini
+        />
+      )}
     </div>
   );
 }

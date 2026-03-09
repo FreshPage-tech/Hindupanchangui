@@ -6,6 +6,7 @@ import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { 
   ArrowLeft, 
   User, 
@@ -18,8 +19,10 @@ import {
   Shield,
   Star,
   Edit2,
-  LogOut
+  LogOut,
+  Languages
 } from "lucide-react";
+import { toast } from "sonner@2.0.3";
 
 interface VedicProfileProps {
   onBack: () => void;
@@ -34,6 +37,7 @@ export function VedicProfile({ onBack }: VedicProfileProps) {
     muhuratReminders: true,
   });
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [language, setLanguage] = useState("english");
 
   const [profile, setProfile] = useState({
     name: "Rajesh Kumar",
@@ -43,6 +47,25 @@ export function VedicProfile({ onBack }: VedicProfileProps) {
     rashi: "Vrishabha (Taurus)",
     nakshatra: "Rohini",
   });
+
+  const languages = [
+    { value: "english", label: "English" },
+    { value: "hindi", label: "हिन्दी (Hindi)" },
+    { value: "tamil", label: "தமிழ் (Tamil)" },
+    { value: "bengali", label: "বাংলা (Bengali)" },
+    { value: "gujarati", label: "ગુજરાતી (Gujarati)" },
+    { value: "kannada", label: "ಕನ್ನಡ (Kannada)" },
+    { value: "malayalam", label: "മലയാളം (Malayalam)" },
+    { value: "telugu", label: "తెలుగు (Telugu)" },
+    { value: "marathi", label: "मराठी (Marathi)" },
+    { value: "punjabi", label: "ਪੰਜਾਬੀ (Punjabi)" },
+    { value: "sanskrit", label: "संस्कृत (Sanskrit)" },
+  ];
+
+  const handleLanguageChange = (value: string) => {
+    setLanguage(value);
+    toast.success(`Language changed to ${languages.find(l => l.value === value)?.label}`);
+  };
 
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light");
@@ -260,13 +283,27 @@ export function VedicProfile({ onBack }: VedicProfileProps) {
 
             <Separator />
 
-            <button className="flex items-center gap-3 w-full">
-              <Globe className="h-5 w-5 text-[#C74225]" />
-              <div className="text-left">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Languages className="h-5 w-5 text-[#C74225]" />
                 <div className="text-[#2C2C2C]">Language</div>
-                <div className="text-xs text-[#6B6B6B]">English</div>
               </div>
-            </button>
+              <Select
+                value={language}
+                onValueChange={handleLanguageChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {languages.map((lang) => (
+                    <SelectItem key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </Card>
 

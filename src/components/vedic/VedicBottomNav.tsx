@@ -8,10 +8,10 @@ interface VedicBottomNavProps {
 export function VedicBottomNav({ activeScreen, onNavigate }: VedicBottomNavProps) {
   const navItems = [
     { id: "dashboard", label: "Home", icon: Home },
-    { id: "completePanchang", label: "Panchang", icon: Calendar },
+    { id: "complete-panchang", label: "Panchang", icon: Calendar },
     { id: "astrology", label: "Astrology", icon: Star },
-    { id: "pujaLibrary", label: "Puja", icon: BookOpen },
-    { id: "shop", label: "Shop", icon: ShoppingBag },
+    { id: "puja-library", label: "Puja", icon: BookOpen },
+    { id: "puja-shop", label: "Shop", icon: ShoppingBag },
   ];
 
   return (
