@@ -10,22 +10,52 @@ import {
 
 import { cn } from "./utils";
 
+// Filter out Figma inspector props that shouldn't be passed to DOM elements
+const filterFigmaProps = (props: Record<string, any>) => {
+  const filtered = { ...props };
+  Object.keys(filtered).forEach(key => {
+    if (key.startsWith('_fg') || key.startsWith('data-fg')) {
+      delete filtered[key];
+    }
+  });
+  return filtered;
+};
+
+// Wrapper components for icons to filter Figma props
+const ChevronDown = React.forwardRef<SVGSVGElement, React.ComponentProps<typeof ChevronDownIcon>>((props, ref) => {
+  const cleanProps = filterFigmaProps(props as any);
+  return <ChevronDownIcon ref={ref} {...cleanProps} />;
+});
+ChevronDown.displayName = "ChevronDown";
+
+const ChevronUp = React.forwardRef<SVGSVGElement, React.ComponentProps<typeof ChevronUpIcon>>((props, ref) => {
+  const cleanProps = filterFigmaProps(props as any);
+  return <ChevronUpIcon ref={ref} {...cleanProps} />;
+});
+ChevronUp.displayName = "ChevronUp";
+
+const Check = React.forwardRef<SVGSVGElement, React.ComponentProps<typeof CheckIcon>>((props, ref) => {
+  const cleanProps = filterFigmaProps(props as any);
+  return <CheckIcon ref={ref} {...cleanProps} />;
+});
+Check.displayName = "Check";
+
 function Select({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />;
+  return <SelectPrimitive.Root data-slot="select" {...filterFigmaProps(props)} />;
 }
 
 function SelectGroup({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Group>) {
-  return <SelectPrimitive.Group data-slot="select-group" {...props} />;
+  return <SelectPrimitive.Group data-slot="select-group" {...filterFigmaProps(props)} />;
 }
 
 function SelectValue({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
-  return <SelectPrimitive.Value data-slot="select-value" {...props} />;
+  return <SelectPrimitive.Value data-slot="select-value" {...filterFigmaProps(props)} />;
 }
 
 function SelectTrigger({
@@ -36,6 +66,7 @@ function SelectTrigger({
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default";
 }) {
+  const cleanProps = filterFigmaProps(props);
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
@@ -44,11 +75,11 @@ function SelectTrigger({
         "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50 flex w-full items-center justify-between gap-2 rounded-md border bg-input-background px-3 py-2 text-sm whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
-      {...props}
+      {...cleanProps}
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
+        <ChevronDown className="size-4 opacity-50" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -71,7 +102,7 @@ function SelectContent({
           className,
         )}
         position={position}
-        {...props}
+        {...filterFigmaProps(props)}
       >
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
@@ -97,7 +128,7 @@ function SelectLabel({
     <SelectPrimitive.Label
       data-slot="select-label"
       className={cn("text-muted-foreground px-2 py-1.5 text-xs", className)}
-      {...props}
+      {...filterFigmaProps(props)}
     />
   );
 }
@@ -114,11 +145,11 @@ function SelectItem({
         "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className,
       )}
-      {...props}
+      {...filterFigmaProps(props)}
     >
       <span className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
+          <Check className="size-4" />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -134,7 +165,7 @@ function SelectSeparator({
     <SelectPrimitive.Separator
       data-slot="select-separator"
       className={cn("bg-border pointer-events-none -mx-1 my-1 h-px", className)}
-      {...props}
+      {...filterFigmaProps(props)}
     />
   );
 }
@@ -150,9 +181,9 @@ function SelectScrollUpButton({
         "flex cursor-default items-center justify-center py-1",
         className,
       )}
-      {...props}
+      {...filterFigmaProps(props)}
     >
-      <ChevronUpIcon className="size-4" />
+      <ChevronUp className="size-4" />
     </SelectPrimitive.ScrollUpButton>
   );
 }
@@ -168,9 +199,9 @@ function SelectScrollDownButton({
         "flex cursor-default items-center justify-center py-1",
         className,
       )}
-      {...props}
+      {...filterFigmaProps(props)}
     >
-      <ChevronDownIcon className="size-4" />
+      <ChevronDown className="size-4" />
     </SelectPrimitive.ScrollDownButton>
   );
 }

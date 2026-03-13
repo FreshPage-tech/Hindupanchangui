@@ -274,3 +274,69 @@ export const AnalyticsAPI = {
     });
   },
 };
+
+// ============================================
+// ASTROLOGY / RASHI API
+// ============================================
+
+export interface RashiData {
+  id: string;
+  name: string;
+  nameHindi: string;
+  element: string;
+  quality: string;
+  rulingPlanet: string;
+  symbol: string;
+  dates: string;
+  luckyNumbers: number[];
+  luckyColors: string[];
+  luckyGemstone: string;
+  compatibility: {
+    best: string[];
+    good: string[];
+    challenging: string[];
+  };
+  characteristics: {
+    positive: string[];
+    negative: string[];
+  };
+  todayPrediction: string;
+  weeklyPrediction: string;
+  monthlyPrediction: string;
+  careerGuidance: string;
+  loveGuidance: string;
+  healthGuidance: string;
+  financeGuidance: string;
+  luckyDay: string;
+  luckyTime: string;
+}
+
+export const AstrologyAPI = {
+  // Get all zodiac signs
+  getAllRashi: async () => {
+    return apiRequest<RashiData[]>('/astrology/rashi', {
+      method: 'GET',
+    });
+  },
+
+  // Get specific Rashi by ID (e.g., 'aries', 'taurus')
+  getRashiById: async (rashiId: string) => {
+    return apiRequest<RashiData>(`/astrology/rashi/${rashiId}`, {
+      method: 'GET',
+    });
+  },
+
+  // Get Rashi by birth date
+  getRashiByDate: async (birthDate: string) => {
+    return apiRequest<RashiData>(`/astrology/rashi-by-date/${birthDate}`, {
+      method: 'GET',
+    });
+  },
+
+  // Get compatibility between two Rashi
+  getCompatibility: async (rashi1: string, rashi2: string) => {
+    return apiRequest(`/astrology/compatibility?rashi1=${rashi1}&rashi2=${rashi2}`, {
+      method: 'GET',
+    });
+  },
+};

@@ -14,6 +14,7 @@ import {
   Activity,
   DollarSign,
   UserPlus,
+  Lightbulb,
 } from "lucide-react";
 
 interface AdminDashboardProps {
@@ -72,6 +73,30 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       icon: Sparkles,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
+    },
+    {
+      id: "content",
+      title: "Content Settings",
+      description: "Manage Thought of the Day and daily wisdom quotes",
+      icon: Lightbulb,
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+    },
+    {
+      id: "myth-buster",
+      title: "Myth Buster Management",
+      description: "Manage daily astrology myths and educational content",
+      icon: Lightbulb,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+    },
+    {
+      id: "shloka",
+      title: "Today's Shloka",
+      description: "Manage daily Sanskrit shlokas with translations",
+      icon: BookOpen,
+      color: "text-[#C74225]",
+      bgColor: "bg-orange-50",
     },
     {
       id: "astrology",
@@ -244,6 +269,14 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               >
                 <Sparkles className="h-4 w-4 mr-2" />
                 Add New Festival
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => onNavigate("content")}
+              >
+                <Lightbulb className="h-4 w-4 mr-2" />
+                Manage Thought of Day
               </Button>
               <Button
                 variant="outline"

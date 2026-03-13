@@ -3,6 +3,9 @@ import { AdminLogin } from "./components/admin/AdminLogin";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { PanchangManagement } from "./components/admin/PanchangManagement";
 import { FestivalManagement } from "./components/admin/FestivalManagement";
+import { ThoughtManagement } from "./components/admin/ThoughtManagement";
+import { MythBusterManagement } from "./components/admin/MythBusterManagement";
+import { ShlokaManagement } from "./components/admin/ShlokaManagement";
 import { Toaster } from "./components/ui/sonner";
 
 type AdminScreen =
@@ -14,7 +17,10 @@ type AdminScreen =
   | "shop"
   | "users"
   | "subscriptions"
-  | "notifications";
+  | "notifications"
+  | "content"
+  | "myth-buster"
+  | "shloka";
 
 export default function AdminApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -184,6 +190,18 @@ export default function AdminApp() {
             </div>
           </div>
         </div>
+      )}
+
+      {currentScreen === "content" && (
+        <ThoughtManagement onBack={handleBack} />
+      )}
+
+      {currentScreen === "myth-buster" && (
+        <MythBusterManagement onBack={handleBack} />
+      )}
+
+      {currentScreen === "shloka" && (
+        <ShlokaManagement onBack={handleBack} />
       )}
     </>
   );

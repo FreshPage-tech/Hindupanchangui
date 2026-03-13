@@ -14,6 +14,7 @@ import * as UserService from './user-service';
 import * as PanchangService from './panchang-service';
 import * as KundaliService from './kundali-service';
 import * as AnalyticsService from './analytics-service';
+import * as AstrologyService from './astrology-service';
 
 const app = express();
 
@@ -372,6 +373,70 @@ app.get("/analytics/user/:userId", authMiddleware, adminMiddleware, async (req, 
     return res.status(result.success ? 200 : 400).json(result);
   } catch (error: any) {
     console.error("Get user analytics error:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// ============================================
+// ASTROLOGY / RASHI ROUTES
+// ============================================
+
+// Get all Rashi (Zodiac Signs)
+app.get("/astrology/rashi", async (req, res) => {
+  try {
+    const result = await AstrologyService.getAllRashi();
+    return res.status(result.success ? 200 : 400).json(result);
+  } catch (error: any) {
+    console.error("Get all Rashi error:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// Get specific Rashi by ID
+app.get("/astrology/rashi/:id", async (req: any, res) => {
+  try {
+    const rashiId = req.params.id;
+    const userId = req.userId; // Optional - may be undefined if not authenticated
+    
+    const result = await AstrologyService.getRashiById(rashiId);
+    
+    if (result.success && userId) {
+      await AstrologyService.trackRashiView(rashiId, userId);
+    }
+    
+    return res.status(result.success ? 200 : 404).json(result);
+  } catch (error: any) {
+    console.error("Get Rashi by ID error:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// Get Rashi by birth date
+app.get("/astrology/rashi-by-date/:date", async (req, res) => {
+  try {
+    const birthDate = req.params.date;
+    const result = await AstrologyService.getRashiByDate(birthDate);
+    return res.status(result.success ? 200 : 404).json(result);
+  } catch (error: any) {
+    console.error("Get Rashi by date error:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// Get Rashi compatibility
+app.get("/astrology/compatibility", async (req, res) => {
+  try {
+    const rashi1 = req.query.rashi1 as string;
+    const rashi2 = req.query.rashi2 as string;
+    
+    if (!rashi1 || !rashi2) {
+      return res.status(400).json({ success: false, error: "Missing rashi parameters" });
+    }
+    
+    const result = await AstrologyService.getRashiCompatibility(rashi1, rashi2);
+    return res.status(result.success ? 200 : 400).json(result);
+  } catch (error: any) {
+    console.error("Get compatibility error:", error);
     return res.status(500).json({ success: false, error: "Internal server error" });
   }
 });

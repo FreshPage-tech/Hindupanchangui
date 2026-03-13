@@ -119,7 +119,7 @@ export function Notifications({ onBack, onNavigate }: NotificationsProps) {
                 className={`p-4 cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden bg-gradient-to-r ${notification.bgColor}`}
                 onClick={() => {
                   if (notification.type === "festival") {
-                    onNavigate("festivalDetail");
+                    onNavigate("festival-detail");
                   } else if (notification.type === "astrology") {
                     onNavigate("astrology");
                   } else if (notification.type === "panchang") {
@@ -158,7 +158,7 @@ export function Notifications({ onBack, onNavigate }: NotificationsProps) {
                 className={`p-4 cursor-pointer hover:shadow-md transition-shadow bg-gradient-to-r ${notification.bgColor}`}
                 onClick={() => {
                   if (notification.type === "festival") {
-                    onNavigate("festivalDetail");
+                    onNavigate("festival-detail");
                   }
                 }}
               >

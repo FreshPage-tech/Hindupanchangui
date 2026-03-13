@@ -42,24 +42,26 @@
 }
 
 .dark {
-  --background: #3D1A14;
+  --background: #1A0D0A;
   --foreground: #FFF8E7;
-  --card: #4A1F18;
+  --card: #2D1510;
   --card-foreground: #FFF8E7;
-  --popover: #4A1F18;
+  --popover: #2D1510;
   --popover-foreground: #FFF8E7;
   --primary: #FF8C69;
-  --primary-foreground: #2C2C2C;
-  --secondary: #FFD700;
-  --secondary-foreground: #2C2C2C;
-  --muted: #5C2820;
-  --muted-foreground: #D4C5B9;
-  --accent: #4CAF50;
-  --accent-foreground: #ffffff;
+  --primary-foreground: #1A0D0A;
+  --secondary: #3D2317;
+  --secondary-foreground: #FFF8E7;
+  --muted: #3D2317;
+  --muted-foreground: #E5D4C1;
+  --accent: #FFD700;
+  --accent-foreground: #1A0D0A;
   --destructive: #EF5350;
-  --destructive-foreground: #ffffff;
-  --border: rgba(255, 215, 0, 0.15);
-  --input: rgba(255, 248, 231, 0.05);
+  --destructive-foreground: #FFF8E7;
+  --border: rgba(255, 140, 105, 0.2);
+  --input: rgba(255, 248, 231, 0.1);
+  --input-background: #2D1510;
+  --switch-background: #3D2317;
   --ring: #FFD700;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -68,13 +70,13 @@
   --chart-3: #4CAF50;
   --chart-4: #FF9933;
   --chart-5: #CD853F;
-  --sidebar: #3D1A14;
+  --sidebar: #1A0D0A;
   --sidebar-foreground: #FFF8E7;
   --sidebar-primary: #FF8C69;
-  --sidebar-primary-foreground: #2C2C2C;
-  --sidebar-accent: #5C2820;
+  --sidebar-primary-foreground: #1A0D0A;
+  --sidebar-accent: #2D1510;
   --sidebar-accent-foreground: #FFF8E7;
-  --sidebar-border: rgba(255, 215, 0, 0.15);
+  --sidebar-border: rgba(255, 140, 105, 0.2);
   --sidebar-ring: #FFD700;
 }
 
@@ -299,14 +301,6 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, #C74225 0%, #FFD700 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -317,13 +311,41 @@ html {
   background: #ffffff;
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: #1A0D0A;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #C74225;
   border-radius: 3px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #FF8C69;
+  border-radius: 3px;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #a03620;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #FFD700;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #C74225 0%, #FFD700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark .gradient-text {
+  background: linear-gradient(135deg, #FF8C69 0%, #FFD700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Minimal accent line */
@@ -339,4 +361,143 @@ html {
   width: 4px;
   height: 100%;
   background: #C74225;
+}
+
+.dark .accent-line::before {
+  background: #FF8C69;
+}
+
+/* Enhanced text visibility in dark mode */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #FFF8E7 !important;
+}
+
+.dark p,
+.dark span,
+.dark div {
+  color: #FFF8E7;
+}
+
+.dark label {
+  color: #FFF8E7 !important;
+}
+
+/* Force override hardcoded text colors in dark mode */
+.dark [class*="text-[#2C2C2C]"],
+.dark [class*="text-[#6B6B6B]"] {
+  color: #FFF8E7 !important;
+}
+
+/* Override specific color utilities */
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  color: #FFF8E7 !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: #E5D4C1 !important;
+}
+
+/* Override background colors */
+.dark .bg-white {
+  background-color: #2D1510 !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: #3D2317 !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: #4A2A1F !important;
+}
+
+/* Dark mode input enhancement */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #2D1510;
+  color: #FFF8E7;
+  border-color: rgba(255, 140, 105, 0.3);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #E5D4C1;
+  opacity: 0.6;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #FFD700;
+  background-color: #3D2317;
+}
+
+/* Dark mode button enhancement */
+.dark button {
+  color: #FFF8E7;
+}
+
+/* Dark mode card enhancement */
+.dark .bg-card {
+  background-color: #2D1510;
+  border-color: rgba(255, 140, 105, 0.2);
+}
+
+/* Dark mode glass morphism */
+.dark .glass {
+  background: rgba(45, 21, 16, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 140, 105, 0.2);
+}
+
+.dark .glass-dark {
+  background: rgba(26, 13, 10, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 140, 105, 0.3);
+}
+
+/* Ensure proper contrast for all text elements */
+.dark .text-muted-foreground {
+  color: #E5D4C1;
+}
+
+.dark .text-card-foreground {
+  color: #FFF8E7;
+}
+
+.dark .text-popover-foreground {
+  color: #FFF8E7;
+}
+
+/* Dark mode shadow enhancement */
+.dark .shadow,
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 
+              0 2px 4px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode border enhancement */
+.dark .border {
+  border-color: rgba(255, 140, 105, 0.2);
+}
+
+.dark .border-primary {
+  border-color: #FF8C69;
+}
+
+.dark .border-accent {
+  border-color: #FFD700;
 }

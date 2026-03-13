@@ -3,8 +3,9 @@ import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
-import { Search, BookOpen, Play, FileText, Headphones, Video, ArrowLeft } from "lucide-react";
+import { Search, BookOpen, Play, FileText, Headphones, Video, ArrowLeft, Pause } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { toast } from "sonner@2.0.3";
 
 interface PujaLibraryProps {
   onBack: () => void;
@@ -13,6 +14,7 @@ interface PujaLibraryProps {
 
 export function PujaLibrary({ onBack, onNavigate }: PujaLibraryProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [playingMantra, setPlayingMantra] = useState<number | null>(null);
 
   const pujaGuides = [
     {
@@ -148,8 +150,18 @@ export function PujaLibrary({ onBack, onNavigate }: PujaLibraryProps) {
     <div className="min-h-screen bg-[#FFF8E7] pb-20">
       {/* Header */}
       <div className="bg-gradient-to-br from-[#C74225] to-[#942D17] text-white p-6">
-        <h1 className="text-white mb-2">Puja Library</h1>
-        <p className="text-[#FFD700]">Step-by-step Puja guides & Mantras</p>
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={onBack}
+            className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-white mb-1">Puja Library</h1>
+            <p className="text-[#FFD700] text-sm">Step-by-step Puja guides & Mantras</p>
+          </div>
+        </div>
       </div>
 
       <div className="p-4 space-y-4">
@@ -197,7 +209,7 @@ export function PujaLibrary({ onBack, onNavigate }: PujaLibraryProps) {
               <Card
                 key={puja.id}
                 className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => onNavigate("festivalDetail")}
+                onClick={() => onNavigate("festival-detail", puja)}
               >
                 <div className="flex gap-3 p-3">
                   <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
@@ -250,11 +262,23 @@ export function PujaLibrary({ onBack, onNavigate }: PujaLibraryProps) {
             {mantras.map((mantra) => (
               <Card
                 key={mantra.id}
-                className="p-4 cursor-pointer hover:shadow-lg transition-shadow"
+                className={`p-4 cursor-pointer hover:shadow-lg transition-all ${
+                  playingMantra === mantra.id 
+                    ? 'shadow-lg border-2 border-[#C74225] bg-gradient-to-r from-orange-50 to-white' 
+                    : ''
+                }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#C74225]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Headphones className="h-6 w-6 text-[#C74225]" />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    playingMantra === mantra.id 
+                      ? 'bg-[#C74225] animate-pulse' 
+                      : 'bg-[#C74225]/10'
+                  }`}>
+                    <Headphones className={`h-6 w-6 ${
+                      playingMantra === mantra.id 
+                        ? 'text-white' 
+                        : 'text-[#C74225]'
+                    }`} />
                   </div>
                   <div className="flex-1">
                     <h4 className="text-[#2C2C2C] mb-1">{mantra.name}</h4>
@@ -262,10 +286,39 @@ export function PujaLibrary({ onBack, onNavigate }: PujaLibraryProps) {
                       <span>{mantra.category}</span>
                       <span>•</span>
                       <span>{mantra.duration}</span>
+                      {playingMantra === mantra.id && (
+                        <>
+                          <span>•</span>
+                          <span className="text-[#C74225] font-medium">Playing...</span>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <button className="w-10 h-10 bg-[#C74225] rounded-full flex items-center justify-center">
-                    <Play className="h-5 w-5 text-white" />
+                  <button
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                      playingMantra === mantra.id
+                        ? 'bg-[#942D17] scale-110'
+                        : 'bg-[#C74225]'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (playingMantra === mantra.id) {
+                        setPlayingMantra(null);
+                        toast.success(`${mantra.name} paused`);
+                      } else {
+                        setPlayingMantra(mantra.id);
+                        toast.success(`Now playing: ${mantra.name}`, {
+                          description: `Duration: ${mantra.duration}`,
+                          icon: '🎵',
+                        });
+                      }
+                    }}
+                  >
+                    {playingMantra === mantra.id ? (
+                      <Pause className="h-5 w-5 text-white" />
+                    ) : (
+                      <Play className="h-5 w-5 text-white ml-0.5" />
+                    )}
                   </button>
                 </div>
               </Card>
@@ -296,6 +349,13 @@ export function PujaLibrary({ onBack, onNavigate }: PujaLibraryProps) {
                   <Card
                     key={puja.id}
                     className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => {
+                      toast.success(`Now playing: ${puja.name}`, {
+                        description: puja.description,
+                        icon: '🎥',
+                      });
+                      onNavigate("festival-detail", puja);
+                    }}
                   >
                     <div className="relative h-32">
                       <ImageWithFallback
